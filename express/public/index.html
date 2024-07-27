@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    Welcome Home
+    <button id="getpostbtn">GetPost</button>
+    <div id="output"></div>
+
+    <form action="" id="addpost">
+        <label for="title">Title</label>
+        <input type="text" id="title">
+        <button type="submit" id="submit">POST</button>
+    </form>
+
+    <form id="updatepost">
+        <label for="postid">Post ID</label>
+        <input type="number" id="postid" name="postid">
+        <label for="newtitle">New Title</label>
+        <input type="text" id="newtitle" name="newtitle">
+        <button type="submit">UPDATE</button>
+    </form>
+    <form id="deletepost">
+        <label for="deleteid">Post ID to Delete</label>
+        <input type="number" id="deleteid" name="deleteid">
+        <button type="submit">DELETE</button>
+    </form>
+    <script>
+        const output = document.getElementById('output')
+        const btn = document.getElementById('getpostbtn')
+        async function show() {
+            const res = await fetch('http://localhost:8000/api/posts')
+            if (!res.ok) {
+                throw new Error('failed')
+            }
+            const posts = await res.json()
+            posts.forEach(post => {
+                const postEl = document.createElement('div')
+                postEl.textContent = post.title
+                output.appendChild(postEl)
+            })
+        }
+        btn.addEventListener('click', show)
+
+        async function addPost(e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const res = await fetch('http://localhost:8000/api/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title })
+            });
+            const newPost = await res.json();
+            const postEl = document.createElement('div');
+            postEl.textContent = newPost.title;
+            output.appendChild(postEl);
+        }
+
+        const form = document.getElementById('addpost');
+        form.addEventListener('click', addPost);
+
+        async function updatepost(e) {
+            e.preventDefault(); // Prevent form from submitting normally
+            const id = document.getElementById('postid').value; // Get the post ID value
+            const newTitle = document.getElementById('newtitle').value; // Get the new title value
+            const res = await fetch(`http://localhost:8000/api/posts/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: newTitle }) // Send new title as JSON
+            });
+            if (!res.ok) {
+                alert('Failed to update post');
+                return;
+            }
+            const updatedPost = await res.json(); // Parse the JSON response
+            show(); // Refresh the post list
+        }
+        const updateForm = document.getElementById('updatepost');
+        updateForm.addEventListener('submit', updatepost);
+
+        async function deletePost(e) {
+            e.preventDefault(); // Prevent form from submitting normally
+            const id = document.getElementById('deleteid').value; // Get the post ID value
+            const res = await fetch(`http://localhost:8000/api/posts/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                alert(`Post with ID ${id} deleted.`);
+                show(); // Refresh the post list
+            } else {
+                alert('Failed to delete post');
+            }
+        }
+
+        const deleteForm = document.getElementById('deletepost');
+        deleteForm.addEventListener('submit', deletePost);
+    </script>
+
+</body>
+
+</html>
