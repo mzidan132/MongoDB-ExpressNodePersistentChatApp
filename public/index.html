@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <style>
+    #messages {
+      list-style-type: none;
+      padding: 0;
+    }
+    #messages li {
+      padding: 8px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #ddd;
+    }
+    #message-form {
+      display: flex;
+    }
+    #message-form input {
+      flex: 1;
+      padding: 8px;
+    }
+    #message-form button {
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <ul id="messages"></ul>
+  <form id="message-form">
+    <input id="username" placeholder="Username" required>
+    <input id="message" placeholder="Message" required autocomplete="off">
+    <button>Send</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message');
+    const usernameInput = document.getElementById('username');
+    const messagesList = document.getElementById('messages');
+
+    socket.on('load old messages', (messages) => {
+      messages.forEach(message => {
+        addMessage(message.username, message.message);
+      });
+    });
+
+    socket.on('new message', (data) => {
+      addMessage(data.username, data.message);
+    });
+
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const message = messageInput.value;
+      const username = usernameInput.value;
+
+      socket.emit('new message', { username, message });
+
+      messageInput.value = '';
+    });
+
+    function addMessage(username, message) {
+      const li = document.createElement('li');
+      li.textContent = `${username}: ${message}`;
+      messagesList.appendChild(li);
+    }
+  </script>
+</body>
+</html>
